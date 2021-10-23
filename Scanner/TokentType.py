@@ -6,4 +6,5 @@ class TokenType(Enum):
     WhiteSpace= 27
     Comment =22
     EOF=25
+    Symbo = 29
 
