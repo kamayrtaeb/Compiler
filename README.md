@@ -1,4 +1,4 @@
 # Compiler
 Compiler project
- \n kamyar taeb 98170924
- \n parimehr morassa far 98171148
+ kamyar taeb 98170924
+ parimehr morassa far 98171148
