@@ -36,6 +36,24 @@ class Scanner:
     def is_keyword(self,str):
         return str in self.keywords
 
+    def lexicalErrors(self, file_name):
+        if self.currentState == 11 or self.currentState == 13:
+            self.lexicalErrors[self.lastComment].append( "(" + self.current_string[:7] + "..., " + "Unclosed comment) ")
+
+        with open(file_name, 'w') as LE:
+            flag = False
+            for i in range(10000):
+                if len(self.lexicalErrors[i]) == 0:
+                    continue
+
+                flag = True
+                LE.write(str(i) + ".\t")
+                LE.write(' '.join(s[0: -1] for s in self.lexicalErrors[i]))
+                LE.write('\n')
+
+            if not flag:
+                LE.write("There is no lexical error.")
+
     def state(self):
         self.matrix[0]["letter"] =1
         self.matrix[0]["digit"]=3
@@ -123,6 +141,29 @@ class Scanner:
             return character
 
         return '!'
+
+
+    def get_next_token(self):
+        if self.newTokens:
+            t1,t2=self.newTokens[0]
+            if t1 in {'KEYWORD', 'SYMBOL'}:
+                t1,t2=t2,t1
+            self.newTokens.pop(0)
+            return t1,t2
+        while True:
+            character=self.input_file.read(1)
+            if character == '$' or character=='':
+                return '$','FILE END'
+
+            self.find_next_character(character)
+
+            if self.newTokens:
+                t1, t2 = self.newTokens[0]
+                if t1 in {'KEYWORD', 'SYMBOL'}:
+                    t1, t2 = t2, t1
+                self.newTokens.pop(0)
+                return t1, t2
+
 
 
     def find_next_character(self,character):
