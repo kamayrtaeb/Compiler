@@ -1,3 +1,6 @@
+import os.path
+
+
 class Scanner:
     def __init__(self,input):
         self.matrix = [dict() for _ in range(16)]
@@ -36,9 +39,25 @@ class Scanner:
     def is_keyword(self,str):
         return str in self.keywords
 
+    def symbolTable(self,filename):
+        with open(filename, 'w') as ST:
+            st_counter = 0
+            for s in self.symbolList:
+                st_counter += 1
+                ST.write(str(st_counter) + ".\t" + s + '\n')
+
+    def token(self,filename):
+        with open(filename, 'w') as f:
+            for line_id in range(10000):
+                if not self.tokens[line_id]:
+                    continue
+                f.write(str(line_id) + '.\t')
+                f.write(' '.join(f'({token_type}, {string})' for token_type, string in self.tokens[line_id]))
+                f.write('\n')
+
     def lexicalErrors(self, file_name):
         if self.currentState == 11 or self.currentState == 13:
-            self.lexicalErrors[self.lastComment].append( "(" + self.current_string[:7] + "..., " + "Unclosed comment) ")
+            self.lexicalErrors[self.lastComment].append( "(" + self.currentStr[:7] + "..., " + "Unclosed comment) ")
 
         with open(file_name, 'w') as LE:
             flag = False
