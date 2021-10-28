@@ -7,6 +7,7 @@ class Scanner:
         self.other=[0] *16
         self.message=['']*16
         self.keywords= ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return","continue"]
+        self.symbolList=["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return"]
 
 
         self.currentState=0
@@ -14,16 +15,16 @@ class Scanner:
         self.commentAll=False
         self.lastComment=-1
         self.tk_counter=1
+        self.commentline=False
+        self.lexicalErrors=[list() for _ in range(10000)]
 
 
 
         self.input_file =open(input,'r')
         self.close_file=self.input_file.close()
-
-
-
-
-
+        self.allTokens=list()
+        self.newTokens=list()
+        self.tokens=[list() for _ in range(10000)]
 
 
         self.symbol=[';', ':' , '[', ']', '(',' )', '{', '}', '+', '-' ,'<']
@@ -107,6 +108,12 @@ class Scanner:
 
 
 
+
+    def addToken(self,tokenType, str):
+        self.allTokens.append((tokenType,str))
+        self.newTokens.append(self.tokens[-1])
+        self.tokens[self.tk_counter].append((tokenType,str))
+
     def diffrent_type(self,character):
         if(character in self.letter):
             return "letter"
@@ -124,12 +131,95 @@ class Scanner:
                 self.currentState=0
 
             self.tk_counter=self.tk_counter+1
-            self.commentAll=False
+            self.commentline=False
 
             finish= False
 
             while not finish:
                 finish=True
+
+                comment=False
+                if self.currentState == 11 or self.currentState ==13:
+                    comment=True
+
+                self.currentStr =self.currentStr + character
+
+                a=self.diffrent_type(character)
+                if not self.commentAll and not self.commentline and a== '!':
+                    if self.currentStr[0:-1] == "/":
+                        if len(self.currentStr[0:-1]) >0:
+                            self.lexicalErrors[self.tk_counter].append( "(" + self.currentStr[0:-1] + ", " + "Invalid input" + ") ")
+                        self.lexicalErrors[self.tk_counter].append( "(" + self.current_string[0:-1] + ", " + "Invalid input" + ") ")
+                        self.currentState=0
+                        self.currentStr=""
+                    else:
+                        self.lexicalErrors[self.tk_counter].append( "(" + self.current_string[0:-1] + ", " + "Invalid input" + ") ")
+                        self.currentStr=""
+                        self.currentState=0
+                elif a in self.matrix[self.currentState]:
+                    if self.matrix[self.currentState][a]==-1:
+                        if character == ' ' or character =='\n' or character =='\t':
+                            self.currentStr=self.currentStr[0:-1]
+                            self.lexicalErrors[self.tk_counter].append( "(" + self.current_string[0:-1] + ", " + "Invalid input" + ") ")
+
+                    self.currentState=self.matrix[self.currentState][a]
+                else:
+                    if self.other[self.currentState]==-1 and self.currentState==10 :
+                        finish=False
+                        self.currentStr=self.currentStr[0:-1]
+                        self.lexicalErrors[self.tk_counter].append( "(" + self.current_string[0:-1] + ", " + "Invalid input" + ") ")
+                    elif self.other[self.currentState]==-1:
+                        if character ==' ' or character == '\n' or character =='\t':
+                            self.currentStr=self.currentStr[0:-1]
+                        self.lexicalErrors[self.tk_counter].append( "(" + self.current_string[0:-1] + ", " + "Invalid input" + ") ")
+
+                    self.currentState=self.other[self.currentState]
+                    if self.currentState==-1:
+                        self.currentState=0
+                        self.currentStr=""
+                if self.currentState == 11:
+                    self.commentline=True
+                    if not comment:
+                        self.lastComment=self.tk_counter
+                if self.currentState==13:
+                    self.commentAll=True
+                    if not comment:
+                        self.lastComment=self.tk_counter
+                if self.term[self.currentState]:
+                    if self.star[self.currentState]:
+                        finish=False
+                        self.currentStr=self.currentStr[0:-1]
+
+
+                    if self.currentState==2:
+                        flag=False
+                        for s in self.symbolList:
+                            if s== self.currentStr:
+                                flag=True
+
+
+                        if not self.is_keyword(self.currentStr) and not flag:
+                            self.symbolList.append(self.currentStr)
+
+                        if self.is_keyword(self.currentStr):
+                            self.addToken("KEYWORD", self.currentStr)
+                        else:
+                            self.addToken("ID",self.currentStr)
+
+                    elif self.currentState==4:
+                        self.addToken("NUM",self.currentStr)
+                    elif self.currentState ==5 or self.currentState==7 or self.currentState==9:
+                        self.addToken("SYMBOL",self.currentStr)
+
+                    elif self.currentState==12 :
+                        self.commentAll= False
+                        self.commentline=False
+
+                    self.currentStr=""
+                    self.currentState=0
+
+
+
 
 
 
