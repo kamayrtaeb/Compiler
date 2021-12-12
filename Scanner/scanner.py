@@ -278,14 +278,3 @@ class Scanner:
                     self.currentStr=""
                     self.currentState=0
 
-
-
-
-
-
-
-
-
-
-
-
